@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-section">
+    <h2>Confirm & Complete Your Information</h2>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-steps">
+        <div class="step completed">
+            <span class="step-number">1</span>
+            <span class="step-label">Upload</span>
+        </div>
+        <div class="step-connector completed"></div>
+        <div class="step active">
+            <span class="step-number">2</span>
+            <span class="step-label">Review & Input</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-label">Results</span>
+        </div>
+    </div>
+    
+    {% if parsing_confidence.overall_confidence < 70 %}
+    <div class="warning-box">
+        <strong>⚠️ Low Parsing Confidence:</strong> 
+        Only {{ parsing_confidence.fields_found }} out of {{ parsing_confidence.fields_total }} fields were automatically extracted. 
+        Please review and complete all fields below.
+    </div>
+    {% else %}
+    <div class="success-box">
+        <strong>✓ Good Extraction:</strong>
+        {{ parsing_confidence.fields_found }} fields were automatically extracted from your salary slip.
+        Please verify the values and add any additional information.
+    </div>
+    {% endif %}
+    
+    {% if salary_data.assumptions_made %}
+    <div class="info-box">
+        <h4>📋 Assumptions Made:</h4>
+        <ul>
+            {% for assumption in salary_data.assumptions_made %}
+            <li>{{ assumption }}</li>
+            {% endfor %}
+        </ul>
+        <p class="assumption-note">Please correct any incorrect assumptions by modifying the values below.</p>
+    </div>
+    {% endif %}
+    
+    <form action="/calculate" method="post" class="tax-form" id="taxForm" onsubmit="return validateAndSubmit(event)">
+        
+        <!-- Section: Salary Information -->
+        <div class="form-section-card">
+            <h3>
+                <span class="section-icon">💰</span>
+                Salary Slip Information
+                <span class="section-help" title="Values extracted from your salary slip. Verify and correct if needed.">?</span>
+            </h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="basic_salary">
+                        Basic Salary <span class="required">*</span>
+                        <span class="tooltip-icon" title="Your basic salary component from the salary slip">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="basic_salary" name="basic_salary" 
+                               value="{{ salary_data.basic_salary }}" step="0.01" required
+                               onblur="validateNumber(this, 0)" oninput="updateGrossSalary()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dearness_allowance">
+                        Dearness Allowance (DA)
+                        <span class="tooltip-icon" title="Inflation-linked allowance, usually a % of basic salary">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="dearness_allowance" name="dearness_allowance" 
+                               value="{{ salary_data.dearness_allowance }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hra">
+                        House Rent Allowance (HRA)
+                        <span class="tooltip-icon" title="Allowance for rent. Required for HRA exemption calculation.">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="hra" name="hra" 
+                               value="{{ salary_data.hra }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="special_allowance">
+                        Special Allowance
+                        <span class="tooltip-icon" title="Taxable allowance that varies by employer">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="special_allowance" name="special_allowance" 
+                               value="{{ salary_data.special_allowance }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="conveyance_allowance">Conveyance Allowance</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="conveyance_allowance" name="conveyance_allowance" 
+                               value="{{ salary_data.conveyance_allowance }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transport_allowance">Transport Allowance</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="transport_allowance" name="transport_allowance" 
+                               value="{{ salary_data.transport_allowance }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                    <small class="field-hint">Leave as 0 if not applicable</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="medical_allowance">Medical Allowance</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="medical_allowance" name="medical_allowance" 
+                               value="{{ salary_data.medical_allowance }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lta">Leave Travel Allowance (LTA)</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="lta" name="lta" 
+                               value="{{ salary_data.lta }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bonus">Bonus / Variable Pay</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="bonus" name="bonus" 
+                               value="{{ salary_data.bonus }}" step="0.01"
+                               oninput="updateGrossSalary()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="gross_salary">
+                        Gross Salary (Annual) <span class="required">*</span>
+                        <span class="tooltip-icon" title="Total annual salary before deductions. This is auto-calculated.">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper highlight">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="gross_salary" name="gross_salary" 
+                               value="{{ salary_data.gross_salary }}" step="0.01" required
+                               onblur="validateNumber(this, 1)">
+                    </div>
+                    <small class="field-hint">Verify this matches your annual CTC/gross</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section: Deductions from Salary -->
+        <div class="form-section-card">
+            <h3>
+                <span class="section-icon">📉</span>
+                Deductions from Salary
+            </h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pf_employee">
+                        PF (Employee Contribution)
+                        <span class="tooltip-icon" title="Your contribution to Provident Fund. Qualifies under 80C.">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="pf_employee" name="pf_employee" 
+                               value="{{ salary_data.pf_employee }}" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="professional_tax">
+                        Professional Tax
+                        <span class="tooltip-icon" title="State tax deducted from salary. Usually ₹200/month.">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="professional_tax" name="professional_tax" 
+                               value="{{ salary_data.professional_tax }}" step="0.01">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="income_tax">Income Tax (TDS deducted)</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="income_tax" name="income_tax" 
+                               value="{{ salary_data.income_tax }}" step="0.01">
+                    </div>
+                    <small class="field-hint">Tax already deducted by employer</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="net_salary">Net Salary (Take-home)</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="net_salary" name="net_salary" 
+                               value="{{ salary_data.net_salary }}" step="0.01">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section: Personal Information -->
+        <div class="form-section-card">
+            <h3>
+                <span class="section-icon">👤</span>
+                Personal Information
+                <span class="section-badge">For Accurate Calculation</span>
+            </h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">
+                        Age
+                        <span class="tooltip-icon" title="Age as on 31st March of the financial year. Affects senior citizen benefits.">ℹ️</span>
+                    </label>
+                    <input type="number" id="age" name="age" min="18" max="100" placeholder="e.g., 35"
+                           onblur="validateNumber(this, 18, 100)">
+                    <small class="field-hint">Age 60+ qualifies for senior citizen benefits</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="city_type">
+                        City Type
+                        <span class="tooltip-icon" title="Metro cities get 50% HRA limit; non-metro get 40%">ℹ️</span>
+                    </label>
+                    <select id="city_type" name="city_type">
+                        <option value="">-- Select City Type --</option>
+                        <option value="metro">Metro (Mumbai, Delhi, Kolkata, Chennai)</option>
+                        <option value="non-metro">Non-Metro (All other cities)</option>
+                    </select>
+                    <small class="field-hint">Required for HRA calculation</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="rent_paid">
+                        Annual Rent Paid
+                        <span class="tooltip-icon" title="Total rent paid in the financial year. Required for HRA exemption.">ℹ️</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="rent_paid" name="rent_paid" step="0.01" 
+                               placeholder="e.g., 180000">
+                    </div>
+                    <small class="field-hint">Leave blank if you don't pay rent or live in own house</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section: Tax Deductions -->
+        <div class="form-section-card">
+            <h3>
+                <span class="section-icon">📊</span>
+                Tax Deductions (Old Regime Only)
+                <span class="section-badge important">Important for Tax Savings</span>
+            </h3>
+            
+            <p class="section-note">
+                These deductions are applicable only in the <strong>Old Tax Regime</strong>. 
+                Enter your total investments/payments for the financial year.
+            </p>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="section_80c">
+                        Section 80C
+                        <span class="limit-badge">Max ₹1,50,000</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section_80c" name="section_80c" 
+                               value="0" step="0.01" min="0" max="150000"
+                               onblur="validateDeductionLimit(this, 150000)">
+                    </div>
+                    <small class="field-hint">PPF, ELSS, NSC, Life Insurance, Home Loan Principal, etc.</small>
+                    <div class="limit-indicator" id="limit_80c">₹0 / ₹1,50,000 used</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="section_80d">
+                        Section 80D (Health Insurance)
+                        <span class="limit-badge">Max ₹25,000</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section_80d" name="section_80d" 
+                               value="0" step="0.01" min="0" max="100000"
+                               onblur="validateDeductionLimit(this, 25000)">
+                    </div>
+                    <small class="field-hint">Health insurance premium for self & family. ₹50,000 if 60+</small>
+                    <div class="limit-indicator" id="limit_80d">₹0 / ₹25,000 used</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="section_80g">
+                        Section 80G (Donations)
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section_80g" name="section_80g" 
+                               value="0" step="0.01" min="0">
+                    </div>
+                    <small class="field-hint">Donations to eligible charitable institutions</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="section_80tta">
+                        Section 80TTA (Savings Interest)
+                        <span class="limit-badge">Max ₹10,000</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section_80tta" name="section_80tta" 
+                               value="0" step="0.01" min="0" max="10000"
+                               onblur="validateDeductionLimit(this, 10000)">
+                    </div>
+                    <small class="field-hint">Interest earned on savings account</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="section_24b">
+                        Section 24(b) (Home Loan Interest)
+                        <span class="limit-badge">Max ₹2,00,000</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section_24b" name="section_24b" 
+                               value="0" step="0.01" min="0" max="200000"
+                               onblur="validateDeductionLimit(this, 200000)">
+                    </div>
+                    <small class="field-hint">Interest paid on home loan for self-occupied property</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Box -->
+        <div class="form-summary-box">
+            <h4>📋 Quick Summary</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Gross Salary:</span>
+                    <span class="summary-value" id="summaryGross">₹0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Deductions Claimed:</span>
+                    <span class="summary-value" id="summaryDeductions">₹0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acknowledgment -->
+        <div class="acknowledgment-check">
+            <label class="checkbox-label">
+                <input type="checkbox" id="acknowledgeTerms" required>
+                <span class="checkmark"></span>
+                <span class="label-text">
+                    I confirm that the information provided is accurate to the best of my knowledge. 
+                    I understand this is an estimate and not professional tax advice.
+                </span>
+            </label>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large" id="submitBtn">
+                <span class="btn-icon">📊</span>
+                Calculate My Tax
+            </button>
+            <a href="/upload" class="btn btn-secondary">← Back to Upload</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Update gross salary when components change
+function updateGrossSalary() {
+    const fields = ['basic_salary', 'dearness_allowance', 'hra', 'conveyance_allowance', 
+                    'transport_allowance', 'special_allowance', 'medical_allowance', 'lta', 'bonus'];
+    let total = 0;
+    fields.forEach(field => {
+        const value = parseFloat(document.getElementById(field).value) || 0;
+        total += value;
+    });
+    
+    // Only update if user hasn't manually changed gross salary significantly
+    const grossInput = document.getElementById('gross_salary');
+    const currentGross = parseFloat(grossInput.value) || 0;
+    
+    // Update summary
+    document.getElementById('summaryGross').textContent = formatCurrency(currentGross);
+    updateDeductionsSummary();
+}
+
+// Update deductions summary
+function updateDeductionsSummary() {
+    const deductionFields = ['section_80c', 'section_80d', 'section_80g', 'section_80tta', 'section_24b'];
+    let total = 0;
+    deductionFields.forEach(field => {
+        const value = parseFloat(document.getElementById(field).value) || 0;
+        total += value;
+    });
+    document.getElementById('summaryDeductions').textContent = formatCurrency(total);
+}
+
+// Validate deduction limits
+function validateDeductionLimit(input, maxLimit) {
+    const value = parseFloat(input.value) || 0;
+    
+    if (value > maxLimit) {
+        input.value = maxLimit;
+        showToast(`Maximum limit is ₹${maxLimit.toLocaleString()}. Value has been adjusted.`, 'warning');
+    }
+    
+    // Update limit indicator
+    const indicatorId = 'limit_' + input.id.replace('section_', '');
+    const indicator = document.getElementById(indicatorId);
+    if (indicator) {
+        indicator.textContent = `₹${value.toLocaleString()} / ₹${maxLimit.toLocaleString()} used`;
+        indicator.className = 'limit-indicator' + (value >= maxLimit ? ' limit-reached' : '');
+    }
+    
+    updateDeductionsSummary();
+}
+
+// Form validation before submit
+function validateAndSubmit(event) {
+    const basicSalary = document.getElementById('basic_salary');
+    const grossSalary = document.getElementById('gross_salary');
+    const acknowledge = document.getElementById('acknowledgeTerms');
+    
+    let isValid = true;
+    
+    // Validate required fields
+    if (!validateNumber(basicSalary, 0)) {
+        showToast('Please enter a valid Basic Salary', 'error');
+        isValid = false;
+    }
+    
+    if (!validateNumber(grossSalary, 1)) {
+        showToast('Please enter a valid Gross Salary greater than 0', 'error');
+        isValid = false;
+    }
+    
+    if (!acknowledge.checked) {
+        showToast('Please acknowledge the terms before proceeding', 'warning');
+        isValid = false;
+    }
+    
+    if (isValid) {
+        showLoading('Calculating your tax...');
+    }
+    
+    return isValid;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateGrossSalary();
+    
+    // Add input listeners for deduction fields
+    const deductionFields = ['section_80c', 'section_80d', 'section_80g', 'section_80tta', 'section_24b'];
+    deductionFields.forEach(field => {
+        document.getElementById(field).addEventListener('input', updateDeductionsSummary);
+    });
+    
+    // Initialize limit indicators
+    validateDeductionLimit(document.getElementById('section_80c'), 150000);
+    validateDeductionLimit(document.getElementById('section_80d'), 25000);
+    validateDeductionLimit(document.getElementById('section_80tta'), 10000);
+    validateDeductionLimit(document.getElementById('section_24b'), 200000);
+});
+</script>
+{% endblock %}

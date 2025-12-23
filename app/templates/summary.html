@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="summary-section">
+    <h2>Tax Summary & AI Advisor</h2>
+    
+    <!-- Main Recommendation -->
+    <div class="recommendation-box {% if result.recommended_regime == 'old' %}recommend-old{% else %}recommend-new{% endif %}">
+        <h3>💡 Recommendation</h3>
+        <p>
+            <strong>{{ result.recommended_regime|upper }} Regime</strong> is better for you.
+            {% if result.savings_amount > 0 %}
+            You can save <strong>₹{{ "{:,.2f}".format(result.savings_amount) }}</strong> 
+            ({{ result.savings_percentage }}%) by choosing the {{ result.recommended_regime }} regime.
+            {% endif %}
+        </p>
+    </div>
+    
+    <!-- AI Summary -->
+    {% if ai_insights %}
+    <div class="ai-summary-box">
+        <div class="ai-badge">
+            {% if ai_insights.ai_generated %}
+            <span class="badge-ai">🤖 AI Powered</span>
+            {% else %}
+            <span class="badge-rule">📋 Smart Analysis</span>
+            {% endif %}
+        </div>
+        <p class="ai-summary-text">{{ ai_insights.summary }}</p>
+        {% if ai_insights.regime_explanation %}
+        <p class="regime-explanation">{{ ai_insights.regime_explanation }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if result.assumptions %}
+    <div class="info-box">
+        <h4>⚠️ Assumptions & Notes:</h4>
+        <ul>
+            {% for assumption in result.assumptions %}
+            <li>{{ assumption }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Tax Comparison Grid -->
+    <div class="comparison-grid">
+        <!-- Old Regime Card -->
+        <div class="regime-card {% if result.recommended_regime == 'old' %}regime-recommended{% endif %}">
+            <h3>
+                Old Regime
+                {% if result.recommended_regime == 'old' %}<span class="recommended-tag">✓ Recommended</span>{% endif %}
+            </h3>
+            <div class="tax-breakdown">
+                <div class="tax-item">
+                    <span>Gross Salary:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.old_regime.gross_salary) }}</strong>
+                </div>
+                
+                <!-- Section-wise Deductions -->
+                <div class="section-header">Deductions Breakdown</div>
+                
+                <div class="tax-item deduction-item">
+                    <span>Standard Deduction:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.standard_deduction) }}</span>
+                </div>
+                {% if result.old_regime.hra_exemption > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>HRA Exemption:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.hra_exemption) }}</span>
+                </div>
+                {% endif %}
+                {% if result.old_regime.section_80c > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>Section 80C:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.section_80c) }}</span>
+                </div>
+                {% endif %}
+                {% if result.old_regime.section_80d > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>Section 80D:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.section_80d) }}</span>
+                </div>
+                {% endif %}
+                {% if result.old_regime.section_80g > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>Section 80G:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.section_80g) }}</span>
+                </div>
+                {% endif %}
+                {% if result.old_regime.section_80tta > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>Section 80TTA:</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.section_80tta) }}</span>
+                </div>
+                {% endif %}
+                {% if result.old_regime.section_24b > 0 %}
+                <div class="tax-item deduction-item">
+                    <span>Section 24(b):</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.section_24b) }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="tax-item total">
+                    <span>Total Deductions:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.old_regime.total_deductions) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Taxable Income:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.old_regime.taxable_income) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Tax (before cess):</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.tax_before_cess) }}</span>
+                </div>
+                <div class="tax-item">
+                    <span>Cess (4%):</span>
+                    <span>₹{{ "{:,.2f}".format(result.old_regime.cess) }}</span>
+                </div>
+                <div class="tax-item final">
+                    <span>Total Tax Payable:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.old_regime.total_tax) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Effective Tax Rate:</span>
+                    <span>{{ "{:.2f}".format(result.old_regime.effective_tax_rate) }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- New Regime Card -->
+        <div class="regime-card {% if result.recommended_regime == 'new' %}regime-recommended{% endif %}">
+            <h3>
+                New Regime
+                {% if result.recommended_regime == 'new' %}<span class="recommended-tag">✓ Recommended</span>{% endif %}
+            </h3>
+            <div class="tax-breakdown">
+                <div class="tax-item">
+                    <span>Gross Salary:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.new_regime.gross_salary) }}</strong>
+                </div>
+                
+                <!-- Section-wise Deductions -->
+                <div class="section-header">Deductions Breakdown</div>
+                
+                <div class="tax-item deduction-item">
+                    <span>Standard Deduction:</span>
+                    <span>₹{{ "{:,.2f}".format(result.new_regime.standard_deduction) }}</span>
+                </div>
+                <div class="tax-item deduction-item muted">
+                    <span>Other Deductions:</span>
+                    <span>Not applicable in New Regime</span>
+                </div>
+                
+                <div class="tax-item total">
+                    <span>Total Deductions:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.new_regime.total_deductions) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Taxable Income:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.new_regime.taxable_income) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Tax (before cess):</span>
+                    <span>₹{{ "{:,.2f}".format(result.new_regime.tax_before_cess) }}</span>
+                </div>
+                <div class="tax-item">
+                    <span>Cess (4%):</span>
+                    <span>₹{{ "{:,.2f}".format(result.new_regime.cess) }}</span>
+                </div>
+                <div class="tax-item final">
+                    <span>Total Tax Payable:</span>
+                    <strong>₹{{ "{:,.2f}".format(result.new_regime.total_tax) }}</strong>
+                </div>
+                <div class="tax-item">
+                    <span>Effective Tax Rate:</span>
+                    <span>{{ "{:.2f}".format(result.new_regime.effective_tax_rate) }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Tax Saving Suggestions -->
+    {% if ai_insights and ai_insights.suggestions %}
+    <div class="ai-suggestions-section">
+        <h3>🎯 Personalized Tax-Saving Suggestions</h3>
+        
+        <div class="suggestions-grid">
+            {% for suggestion in ai_insights.suggestions %}
+            <div class="suggestion-card priority-{{ suggestion.priority }}">
+                <div class="suggestion-header">
+                    <span class="section-badge">{{ suggestion.section }}</span>
+                    <span class="priority-badge priority-{{ suggestion.priority }}">
+                        {% if suggestion.priority == 'high' %}🔴 High Priority
+                        {% elif suggestion.priority == 'medium' %}🟡 Medium
+                        {% else %}🟢 Low
+                        {% endif %}
+                    </span>
+                </div>
+                <h4>{{ suggestion.title }}</h4>
+                <p class="current-status">{{ suggestion.current_status }}</p>
+                <p class="potential-saving">💰 {{ suggestion.potential_saving }}</p>
+                
+                {% if suggestion.action_items %}
+                <div class="action-items">
+                    <strong>Action Items:</strong>
+                    <ul>
+                        {% for action in suggestion.action_items %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Additional Tips -->
+    {% if ai_insights and ai_insights.additional_tips %}
+    <div class="additional-tips-section">
+        <h3>💡 Additional Tax Tips</h3>
+        <ul class="tips-list">
+            {% for tip in ai_insights.additional_tips %}
+            <li>{{ tip }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Section Explanations (Collapsible) -->
+    <div class="section-explanations">
+        <h3>📚 Understanding Tax Sections</h3>
+        <div class="explanations-grid">
+            <div class="explanation-card">
+                <button class="explanation-toggle" onclick="toggleExplanation(this)">
+                    Section 80C <span class="toggle-icon">+</span>
+                </button>
+                <div class="explanation-content">
+                    {{ section_explanations['80C']|safe }}
+                </div>
+            </div>
+            <div class="explanation-card">
+                <button class="explanation-toggle" onclick="toggleExplanation(this)">
+                    Section 80D <span class="toggle-icon">+</span>
+                </button>
+                <div class="explanation-content">
+                    {{ section_explanations['80D']|safe }}
+                </div>
+            </div>
+            <div class="explanation-card">
+                <button class="explanation-toggle" onclick="toggleExplanation(this)">
+                    HRA Exemption <span class="toggle-icon">+</span>
+                </button>
+                <div class="explanation-content">
+                    {{ section_explanations['HRA']|safe }}
+                </div>
+            </div>
+            <div class="explanation-card">
+                <button class="explanation-toggle" onclick="toggleExplanation(this)">
+                    Section 24(b) <span class="toggle-icon">+</span>
+                </button>
+                <div class="explanation-content">
+                    {{ section_explanations['24B']|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Disclaimer -->
+    {% if ai_insights and ai_insights.disclaimer %}
+    <div class="disclaimer-box">
+        <h4>⚖️ Disclaimer</h4>
+        <p>{{ ai_insights.disclaimer }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Chat with AI Advisor -->
+    <div class="chat-cta-section">
+        <h3>💬 Have More Questions?</h3>
+        <p>Chat with our AI Tax Advisor for personalized guidance, scenario exploration, and detailed explanations.</p>
+        <form action="/chat/start" method="POST" id="chatForm">
+            <input type="hidden" name="salary_data" id="salaryDataInput">
+            <input type="hidden" name="user_profile" id="userProfileInput">
+            <input type="hidden" name="tax_result" id="taxResultInput">
+            <button type="submit" class="btn btn-chat">
+                🤖 Chat with Tax Advisor
+            </button>
+        </form>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/upload" class="btn btn-primary">Calculate Another</a>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+
+<script>
+// Prepare data for chat
+const salaryData = {{ salary_data | tojson | safe }};
+const userProfile = {{ user_profile | tojson | safe }};
+const taxResult = {{ result | tojson | safe }};
+
+document.getElementById('salaryDataInput').value = JSON.stringify(salaryData);
+document.getElementById('userProfileInput').value = JSON.stringify(userProfile);
+document.getElementById('taxResultInput').value = JSON.stringify(taxResult);
+
+function toggleExplanation(button) {
+    const card = button.parentElement;
+    const content = card.querySelector('.explanation-content');
+    const icon = button.querySelector('.toggle-icon');
+    
+    if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        icon.textContent = '+';
+    } else {
+        content.classList.add('show');
+        icon.textContent = '−';
+    }
+}
+</script>
+{% endblock %}

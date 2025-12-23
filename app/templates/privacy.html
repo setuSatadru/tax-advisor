@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="privacy-section">
+    <h2>🔒 Privacy & Data Handling</h2>
+    
+    <div class="trust-banner">
+        <div class="trust-icon">🛡️</div>
+        <div class="trust-content">
+            <h3>Your Data, Your Control</h3>
+            <p>We prioritize your privacy. This prototype processes your data locally and does not permanently store sensitive information.</p>
+        </div>
+    </div>
+
+    <div class="policy-grid">
+        <!-- Data Collection -->
+        <div class="policy-card">
+            <div class="policy-icon">📥</div>
+            <h3>What We Collect</h3>
+            <ul>
+                <li><strong>Salary Slip Data:</strong> Extracted salary components, allowances, and deductions from your uploaded PDF</li>
+                <li><strong>Tax Information:</strong> Deduction claims (80C, 80D, etc.) you provide via forms</li>
+                <li><strong>Personal Details:</strong> Age, city type, rent paid (for HRA calculation)</li>
+                <li><strong>Chat Messages:</strong> Questions you ask the AI advisor (session-based only)</li>
+            </ul>
+        </div>
+
+        <!-- Data Usage -->
+        <div class="policy-card">
+            <div class="policy-icon">⚙️</div>
+            <h3>How We Use It</h3>
+            <ul>
+                <li><strong>Tax Calculation:</strong> Computing your tax liability under Old and New regimes</li>
+                <li><strong>AI Suggestions:</strong> Generating personalized tax-saving recommendations</li>
+                <li><strong>Q&A Responses:</strong> Answering your tax-related questions contextually</li>
+                <li><strong>No Marketing:</strong> Your data is never used for advertising or sold to third parties</li>
+            </ul>
+        </div>
+
+        <!-- Data Storage -->
+        <div class="policy-card">
+            <div class="policy-icon">💾</div>
+            <h3>Data Storage</h3>
+            <ul>
+                <li><strong>Temporary Processing:</strong> Your uploaded PDF is processed and immediately discarded</li>
+                <li><strong>Session-Based:</strong> Tax calculations exist only during your active session</li>
+                <li><strong>No Permanent Storage:</strong> We do not store your salary or tax data in any database</li>
+                <li><strong>Chat History:</strong> Cleared when you close your browser or start a new calculation</li>
+            </ul>
+        </div>
+
+        <!-- Third Party -->
+        <div class="policy-card">
+            <div class="policy-icon">🔗</div>
+            <h3>Third-Party Services</h3>
+            <ul>
+                <li><strong>Google Gemini AI:</strong> Powers our tax suggestions and Q&A features</li>
+                <li><strong>Data Sent:</strong> Anonymized tax profile summary (no personal identifiers)</li>
+                <li><strong>Purpose:</strong> Generating personalized insights and answering questions</li>
+                <li><strong>Google's Policy:</strong> <a href="https://policies.google.com/privacy" target="_blank">View Google's Privacy Policy</a></li>
+            </ul>
+        </div>
+
+        <!-- Security -->
+        <div class="policy-card">
+            <div class="policy-icon">🔐</div>
+            <h3>Security Measures</h3>
+            <ul>
+                <li><strong>HTTPS:</strong> All data transmission is encrypted</li>
+                <li><strong>No PAN Storage:</strong> We don't store your PAN or other ID numbers</li>
+                <li><strong>File Validation:</strong> Only PDF files under 10MB are accepted</li>
+                <li><strong>Input Sanitization:</strong> All user inputs are validated and sanitized</li>
+            </ul>
+        </div>
+
+        <!-- Your Rights -->
+        <div class="policy-card">
+            <div class="policy-icon">✅</div>
+            <h3>Your Rights</h3>
+            <ul>
+                <li><strong>Access:</strong> View all data extracted from your salary slip before calculation</li>
+                <li><strong>Modification:</strong> Edit any extracted values in the confirmation form</li>
+                <li><strong>Deletion:</strong> Close your browser to clear all session data</li>
+                <li><strong>No Account:</strong> Use the service without creating an account</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Important Disclaimers -->
+    <div class="disclaimer-section">
+        <h3>⚖️ Important Disclaimers</h3>
+        
+        <div class="disclaimer-cards">
+            <div class="disclaimer-card warning">
+                <h4>Not Professional Tax Advice</h4>
+                <p>This tool provides <strong>informational estimates only</strong>. The calculations and suggestions are based on general tax rules and may not account for your specific circumstances. Always consult a qualified <strong>Chartered Accountant (CA)</strong> or tax professional for official tax filing and complex situations.</p>
+            </div>
+            
+            <div class="disclaimer-card info">
+                <h4>Accuracy Limitations</h4>
+                <p>While we strive for accuracy, tax laws change frequently. This prototype is based on <strong>FY 2024-25</strong> tax rules. The AI-generated suggestions are meant to educate and guide, not replace professional advice. Verify all calculations before making financial decisions.</p>
+            </div>
+            
+            <div class="disclaimer-card caution">
+                <h4>Prototype Status</h4>
+                <p>This is a <strong>prototype application</strong> for educational and demonstration purposes. It supports only salaried individuals and excludes freelancers, pensioners, capital gains, and other income sources. Do not use this as your sole basis for tax filing.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acknowledgment -->
+    <div class="acknowledgment-section">
+        <h3>📋 By Using This Service</h3>
+        <div class="acknowledgment-box">
+            <ul>
+                <li>I understand this is a prototype providing informational estimates only</li>
+                <li>I acknowledge that AI suggestions are not professional tax advice</li>
+                <li>I will verify calculations with a qualified professional before filing taxes</li>
+                <li>I consent to my anonymized tax profile being processed by Google Gemini AI</li>
+                <li>I understand my data is processed temporarily and not stored permanently</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/upload" class="btn btn-primary">I Understand - Continue to Upload</a>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="welcome-section">
+    <h2>Welcome to Tax Advisor</h2>
+    <p class="welcome-tagline">Your AI-powered assistant for smart tax planning and optimization.</p>
+    
+    <!-- Trust Indicators -->
+    <div class="trust-indicators">
+        <div class="trust-item">
+            <span class="trust-icon">🔒</span>
+            <span class="trust-text">Secure & Private</span>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">⚡</span>
+            <span class="trust-text">Instant Results</span>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">🎯</span>
+            <span class="trust-text">Accurate Calculations</span>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">🆓</span>
+            <span class="trust-text">100% Free</span>
+        </div>
+    </div>
+    
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">📄</div>
+            <h3>Upload Salary Slip</h3>
+            <p>Upload your salary slip PDF and let our intelligent parser extract information automatically.</p>
+            <ul class="feature-list">
+                <li>✓ Supports text-based PDFs</li>
+                <li>✓ Auto-detects salary components</li>
+                <li>✓ Secure processing</li>
+            </ul>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">✅</div>
+            <h3>Review & Complete</h3>
+            <p>Verify extracted data and provide additional tax-relevant information through a simple form.</p>
+            <ul class="feature-list">
+                <li>✓ Edit extracted values</li>
+                <li>✓ Add deduction claims</li>
+                <li>✓ Input validation</li>
+            </ul>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Compare Tax Regimes</h3>
+            <p>Get a detailed comparison between Old and New tax regimes with clear recommendations.</p>
+            <ul class="feature-list">
+                <li>✓ Old vs New comparison</li>
+                <li>✓ Savings calculation</li>
+                <li>✓ Deduction breakdowns</li>
+            </ul>
+        </div>
+        
+        <div class="feature-card highlight">
+            <div class="feature-icon">🤖</div>
+            <h3>AI Tax Advisor</h3>
+            <p>Get personalized tax-saving suggestions and chat with our AI for scenario exploration.</p>
+            <ul class="feature-list">
+                <li>✓ Personalized suggestions</li>
+                <li>✓ "What if" scenarios</li>
+                <li>✓ Conversational Q&A</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="cta-section">
+        <a href="/upload" class="btn btn-primary btn-large">
+            <span class="btn-icon">🚀</span>
+            Get Started - Upload Salary Slip
+        </a>
+        <p class="cta-note">Free • No Registration Required • Takes ~2 minutes</p>
+    </div>
+    
+    <!-- How It Works -->
+    <div class="how-it-works">
+        <h3>How It Works</h3>
+        <div class="steps-timeline">
+            <div class="timeline-step">
+                <div class="step-circle">1</div>
+                <div class="step-content">
+                    <h4>Upload PDF</h4>
+                    <p>Upload your salary slip PDF (text-based)</p>
+                </div>
+            </div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-step">
+                <div class="step-circle">2</div>
+                <div class="step-content">
+                    <h4>Review Data</h4>
+                    <p>Verify extracted data & add deductions</p>
+                </div>
+            </div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-step">
+                <div class="step-circle">3</div>
+                <div class="step-content">
+                    <h4>Get Results</h4>
+                    <p>View tax comparison & AI suggestions</p>
+                </div>
+            </div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-step">
+                <div class="step-circle">4</div>
+                <div class="step-content">
+                    <h4>Ask Questions</h4>
+                    <p>Chat with AI for detailed guidance</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Important Notice -->
+    <div class="notice-box">
+        <h4>⚠️ Important Notice</h4>
+        <p>
+            This tool provides <strong>informational tax estimates</strong> for salaried individuals based on 
+            <strong>FY 2024-25</strong> rules. It is designed for educational purposes and should not replace 
+            professional tax advice. Always consult a <strong>Chartered Accountant</strong> for official tax filing.
+        </p>
+    </div>
+    
+    <div class="info-box">
+        <h4>✅ Features & Capabilities</h4>
+        <div class="capabilities-grid">
+            <div class="capability-column">
+                <h5>Supported</h5>
+                <ul>
+                    <li>✅ Salaried individuals</li>
+                    <li>✅ Old vs New regime</li>
+                    <li>✅ 80C, 80D, HRA, 24(b)</li>
+                    <li>✅ AI suggestions</li>
+                    <li>✅ Conversational Q&A</li>
+                    <li>✅ Scenario exploration</li>
+                </ul>
+            </div>
+            <div class="capability-column">
+                <h5>Not Supported</h5>
+                <ul>
+                    <li>❌ Form 16 processing</li>
+                    <li>❌ Freelancer income</li>
+                    <li>❌ Capital gains</li>
+                    <li>❌ Pensioner income</li>
+                    <li>❌ Multiple employers</li>
+                    <li>❌ Foreign income</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Privacy Quick Note -->
+    <div class="privacy-quick">
+        <span class="privacy-icon">🔒</span>
+        <span class="privacy-text">
+            Your data is processed securely and not stored permanently. 
+            <a href="/privacy">Learn more about our privacy practices →</a>
+        </span>
+    </div>
+</div>
+{% endblock %}

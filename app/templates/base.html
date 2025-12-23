@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }}{% endblock %} - Tax Advisor</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tax Advisor</h1>
+            <p class="subtitle">GenAI-Based Tax Advisor for Salaried Individuals</p>
+            <div class="trust-badge-header">
+                <span class="badge-secure">🔒 Secure</span>
+                <span class="badge-private">🛡️ Privacy-First</span>
+                <span class="badge-ai">🤖 AI-Powered</span>
+            </div>
+        </header>
+        
+        <nav>
+            <a href="/">Home</a>
+            <a href="/upload">Upload Salary Slip</a>
+            <a href="/privacy">Privacy & Disclaimers</a>
+        </nav>
+        
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        
+        <footer>
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="/privacy">Privacy Policy</a>
+                    <span class="footer-divider">|</span>
+                    <a href="/privacy#disclaimers">Disclaimers</a>
+                    <span class="footer-divider">|</span>
+                    <span class="footer-note">FY 2024-25</span>
+                </div>
+                <p class="footer-disclaimer">
+                    ⚠️ This is a prototype for informational purposes only. Not professional tax advice. 
+                    Consult a CA for official tax filing.
+                </p>
+                <p class="footer-powered">
+                    Phase 4 - Complete | Powered by Gemini AI
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Global Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+    </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- Global JavaScript Utilities -->
+    <script>
+        // Loading overlay functions
+        function showLoading(text = 'Processing...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Toast notification function
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icons = {
+                'success': '✓',
+                'error': '✕',
+                'warning': '⚠',
+                'info': 'ℹ'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+        
+        // Form validation utilities
+        function validateRequired(input) {
+            const value = input.value.trim();
+            const isValid = value !== '';
+            toggleFieldError(input, !isValid, 'This field is required');
+            return isValid;
+        }
+        
+        function validateNumber(input, min = null, max = null) {
+            const value = parseFloat(input.value);
+            if (isNaN(value)) {
+                toggleFieldError(input, true, 'Please enter a valid number');
+                return false;
+            }
+            if (min !== null && value < min) {
+                toggleFieldError(input, true, `Value must be at least ${min}`);
+                return false;
+            }
+            if (max !== null && value > max) {
+                toggleFieldError(input, true, `Value cannot exceed ${max}`);
+                return false;
+            }
+            toggleFieldError(input, false);
+            return true;
+        }
+        
+        function toggleFieldError(input, showError, message = '') {
+            const formGroup = input.closest('.form-group');
+            if (!formGroup) return;
+            
+            let errorEl = formGroup.querySelector('.field-error');
+            
+            if (showError) {
+                input.classList.add('input-error');
+                if (!errorEl) {
+                    errorEl = document.createElement('span');
+                    errorEl.className = 'field-error';
+                    formGroup.appendChild(errorEl);
+                }
+                errorEl.textContent = message;
+            } else {
+                input.classList.remove('input-error');
+                if (errorEl) errorEl.remove();
+            }
+        }
+        
+        // Format currency
+        function formatCurrency(value) {
+            return '₹' + parseFloat(value || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+    </script>
+</body>
+</html>

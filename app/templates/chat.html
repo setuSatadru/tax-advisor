@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <h2>🤖 Tax Advisor Chat</h2>
+            <p class="chat-subtitle">Ask questions about your tax calculation</p>
+        </div>
+        <div class="chat-header-stats">
+            <span class="stat-item">
+                <span class="stat-label">Gross Salary:</span>
+                <span class="stat-value">₹{{ "{:,.0f}".format(salary_data.gross_salary) }}</span>
+            </span>
+            <span class="stat-item">
+                <span class="stat-label">Recommended:</span>
+                <span class="stat-value regime-badge">{{ tax_result.recommended_regime|upper }}</span>
+            </span>
+            <span class="stat-item">
+                <span class="stat-label">Savings:</span>
+                <span class="stat-value savings-badge">₹{{ "{:,.0f}".format(tax_result.savings_amount) }}</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="chat-main">
+        <!-- Sidebar with suggestions -->
+        <div class="chat-sidebar">
+            <h3>💡 Quick Questions</h3>
+            
+            <div class="suggestion-category">
+                <h4>Tax Savings</h4>
+                <button class="suggestion-btn" onclick="askQuestion('How can I save more tax under 80C?')">
+                    80C Investment Options
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('Should I invest in NPS for additional tax benefits?')">
+                    NPS Benefits
+                </button>
+            </div>
+            
+            <div class="suggestion-category">
+                <h4>Deductions</h4>
+                <button class="suggestion-btn" onclick="askQuestion('How is HRA exemption calculated?')">
+                    HRA Calculation
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What qualifies under Section 80D?')">
+                    Health Insurance (80D)
+                </button>
+            </div>
+            
+            <div class="suggestion-category">
+                <h4>Scenarios</h4>
+                <button class="suggestion-btn" onclick="askQuestion('What if I invest ₹50,000 more in 80C?')">
+                    What if: More 80C
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What if I start paying rent of ₹15,000 per month?')">
+                    What if: Pay Rent
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What if I get health insurance for my parents?')">
+                    What if: Parent Insurance
+                </button>
+            </div>
+            
+            <div class="suggestion-category">
+                <h4>Regime</h4>
+                <button class="suggestion-btn" onclick="askQuestion('Why is the {{ tax_result.recommended_regime }} regime better for me?')">
+                    Why {{ tax_result.recommended_regime|title }}?
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('Can I switch regimes next year?')">
+                    Switching Regimes
+                </button>
+            </div>
+            
+            <div class="sidebar-footer">
+                <a href="/upload" class="btn btn-secondary btn-small">← New Calculation</a>
+            </div>
+        </div>
+        
+        <!-- Chat Messages Area -->
+        <div class="chat-messages-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome Message -->
+                <div class="message assistant-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <p>Hello! I'm your AI Tax Advisor. I've analyzed your tax calculation and I'm here to help you with any questions.</p>
+                            <p>You can ask me about:</p>
+                            <ul>
+                                <li>Tax-saving investment options</li>
+                                <li>Deduction calculations and limits</li>
+                                <li>"What if" scenarios to explore savings</li>
+                                <li>Old vs New regime comparison</li>
+                            </ul>
+                            <p>Try clicking one of the quick questions on the left, or type your own question below!</p>
+                        </div>
+                        <div class="message-meta">
+                            <span class="confidence-badge high">High Confidence</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <form id="chatForm" onsubmit="sendMessage(event)">
+                    <input type="hidden" id="sessionId" value="{{ session_id }}">
+                    <div class="chat-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Ask a question about your taxes..." 
+                            autocomplete="off"
+                        >
+                        <button type="submit" class="send-btn" id="sendBtn">
+                            <span class="send-icon">→</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="input-hints">
+                    <span>Try: "What if I invest more in 80C?" or "How is HRA calculated?"</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const sessionId = document.getElementById('sessionId').value;
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function askQuestion(question) {
+    messageInput.value = question;
+    sendMessage(new Event('submit'));
+}
+
+function addUserMessage(text) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user-message';
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="message-text">${escapeHtml(text)}</div>
+        </div>
+        <div class="message-avatar">👤</div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addAssistantMessage(response) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message';
+    
+    let answerHtml = marked.parse(response.answer || 'I could not generate a response.');
+    
+    // Build confidence badge
+    const confidence = response.confidence || 'medium';
+    const confidenceReason = response.confidence_reason || '';
+    
+    // Build assumptions section
+    let assumptionsHtml = '';
+    if (response.assumptions && response.assumptions.length > 0) {
+        assumptionsHtml = `
+            <div class="assumptions-section">
+                <strong>📋 Assumptions:</strong>
+                <ul>
+                    ${response.assumptions.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // Build scenario calculation section
+    let scenarioHtml = '';
+    if (response.scenario_calculation && response.scenario_calculation.applicable) {
+        const sc = response.scenario_calculation;
+        scenarioHtml = `
+            <div class="scenario-section">
+                <h5>📊 Scenario Calculation</h5>
+                <div class="scenario-comparison">
+                    <div class="scenario-box before">
+                        <span class="scenario-label">Before</span>
+                        <span class="scenario-desc">${escapeHtml(sc.before?.description || '')}</span>
+                        <span class="scenario-value">₹${(sc.before?.tax || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="scenario-arrow">→</div>
+                    <div class="scenario-box after">
+                        <span class="scenario-label">After</span>
+                        <span class="scenario-desc">${escapeHtml(sc.after?.description || '')}</span>
+                        <span class="scenario-value">₹${(sc.after?.tax || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+                ${sc.savings ? `<div class="scenario-savings">💰 Potential Savings: ₹${sc.savings.toLocaleString()}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    // Build follow-up suggestions
+    let followUpHtml = '';
+    if (response.follow_up_suggestions && response.follow_up_suggestions.length > 0) {
+        followUpHtml = `
+            <div class="follow-up-section">
+                <strong>You might also ask:</strong>
+                <div class="follow-up-buttons">
+                    ${response.follow_up_suggestions.slice(0, 3).map(q => 
+                        `<button class="follow-up-btn" onclick="askQuestion('${escapeHtml(q)}')">${escapeHtml(q)}</button>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Build disclaimer
+    let disclaimerHtml = '';
+    if (response.disclaimer) {
+        disclaimerHtml = `
+            <div class="disclaimer-section">
+                ⚖️ ${escapeHtml(response.disclaimer)}
+            </div>
+        `;
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="message-text">${answerHtml}</div>
+            ${scenarioHtml}
+            ${assumptionsHtml}
+            ${followUpHtml}
+            ${disclaimerHtml}
+            <div class="message-meta">
+                <span class="confidence-badge ${confidence}" title="${escapeHtml(confidenceReason)}">
+                    ${confidence === 'high' ? '🟢' : confidence === 'medium' ? '🟡' : '🔴'} 
+                    ${confidence.charAt(0).toUpperCase() + confidence.slice(1)} Confidence
+                </span>
+                ${response.ai_generated ? '<span class="ai-badge">🤖 AI</span>' : '<span class="rule-badge">📋 Rule-based</span>'}
+                ${response.is_scenario ? '<span class="scenario-badge">📊 Scenario</span>' : ''}
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'message assistant-message typing-indicator';
+    indicator.id = 'typingIndicator';
+    indicator.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(indicator);
+    scrollToBottom();
+}
+
+function removeTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function sendMessage(event) {
+    event.preventDefault();
+    
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    // Clear input and disable
+    messageInput.value = '';
+    messageInput.disabled = true;
+    sendBtn.disabled = true;
+    
+    // Add user message
+    addUserMessage(message);
+    
+    // Show typing indicator
+    addTypingIndicator();
+    
+    try {
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+        formData.append('message', message);
+        
+        const response = await fetch('/chat/message', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        // Remove typing indicator
+        removeTypingIndicator();
+        
+        if (data.success) {
+            addAssistantMessage(data.response);
+        } else {
+            addAssistantMessage({
+                answer: `⚠️ Error: ${data.error || 'Something went wrong. Please try again.'}`,
+                confidence: 'low',
+                ai_generated: false
+            });
+        }
+    } catch (error) {
+        removeTypingIndicator();
+        addAssistantMessage({
+            answer: `⚠️ Network error. Please check your connection and try again.`,
+            confidence: 'low',
+            ai_generated: false
+        });
+    }
+    
+    // Re-enable input
+    messageInput.disabled = false;
+    sendBtn.disabled = false;
+    messageInput.focus();
+}
+
+// Load marked.js for markdown parsing
+const markedScript = document.createElement('script');
+markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+document.head.appendChild(markedScript);
+
+// Focus input on load
+messageInput.focus();
+</script>
+{% endblock %}
+
